@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
-from net import gtnet  # Убедись, что файл net.py доступен
+from net import gtnet
 
 # Параметры
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -15,11 +15,10 @@ batch_size = 16
 epochs = 20
 learning_rate = 0.001
 
-# СИНТЕТИЧЕСКИЕ ДАННЫЕ (замени на свои)
+# СИНТЕТИЧЕСКИЕ ДАННЫЕ
 np.random.seed(42)
 data = np.random.randn(num_nodes, in_dim, total_time).astype(np.float32)  # (10, 5, 100)
 
-# 👇 Разбиваем на обучающие примеры
 def create_dataset(data, seq_len, pred_len):
     x_list, y_list = [], []
     for t in range(data.shape[2] - seq_len - pred_len + 1):
@@ -34,19 +33,19 @@ def create_dataset(data, seq_len, pred_len):
 X, Y = create_dataset(data, seq_length, out_dim)
 print("Dataset shape:", X.shape, Y.shape)
 
-# 🔀 Разделение на train/test (80%/20%)
+
 train_size = int(0.8 * len(X))
 X_train, X_test = X[:train_size], X[train_size:]
 Y_train, Y_test = Y[:train_size], Y[train_size:]
 
-# 📦 DataLoader'ы
+
 train_dataset = torch.utils.data.TensorDataset(X_train, Y_train)
 test_dataset = torch.utils.data.TensorDataset(X_test, Y_test)
 
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-# 🤖 Инициализация модели
+
 model = gtnet(
     gcn_true=True,
     buildA_true=True,
@@ -67,11 +66,11 @@ model = gtnet(
     layers=3
 ).to(device)
 
-# 🔍 Оптимизатор и функция потерь
+
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 loss_fn = nn.MSELoss()
 
-# 🔁 Цикл обучения с валидацией
+
 for epoch in range(epochs):
     model.train()
     total_loss = 0
@@ -91,7 +90,7 @@ for epoch in range(epochs):
         optimizer.step()
         total_loss += loss.item()
     
-    # 🧪 Валидация
+
     model.eval()
     val_loss = 0
     with torch.no_grad():
